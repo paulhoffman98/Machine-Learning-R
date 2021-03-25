@@ -1,0 +1,72 @@
+---
+title: "Individual Assignment 1"
+author: "Paul Hoffman (450128)"
+date: "9/20/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#a) Load Data, rows and colummns
+```{r}
+library(MASS)
+Boston
+?Boston
+nrow(Boston) #rows in data set
+ncol(Boston) #columns in data set
+```
+
+#b) Pairwise scatterplots
+```{r}
+pairs(Boston)
+par(mfrow = c(2,2))
+plot(Boston$age, Boston$crim) #As age increases there is a postive correlation to crime rate
+plot(Boston$dis, Boston$crim) #As distance from employment center increases crime rates decrease
+plot(Boston$tax, Boston$crim) #Tax does not seem to be that effected until greater than 650 and crime rate then increases
+plot(Boston$nox, Boston$crim) #As nitrogen oxide concentration increases crime rates increase
+```
+
+#c) Predictors associated with per capita crime rate
+```{r}
+hist(Boston$crim, breaks = 100) #20% fall under crime rates
+pairs(Boston[Boston$crim < 20, ]) #possible predictors include: zn, nox, age, dis, and ptratio
+```
+
+#d) Suburbs with high crime rates, tax rates, pupil-teacher ratios
+```{r}
+par(mfrow = c(3,1))
+hist(Boston$crim) #about 20 suburbs with high crime rates
+hist(Boston$tax) #crime rates have a influxes by tax from 200-400 and spike again around 650-700 (both in $10,000s)
+hist(Boston$ptratio) #crime rates increase significantly at 20
+```
+
+#e) Suburbs bound by Charles River
+```{r}
+nrow(Boston[Boston$chas == 1, ]) #35 suburbs found bound by Charles River
+```
+
+#f) Median pupil-teacher ratio
+```{r}
+median(Boston$ptratio) #Median pupil-teacher ratio of 19.05 in the data set
+```
+
+#g) Lowest Median Value of owner-occupied homes, and other predictors
+```{r}
+min(Boston$medv) #$5000 is the lowest median value of owner-occupied homes
+which.min(Boston$medv) #This is suburb 399 has the lowest median value
+```
+Possible predictors for this could include: age, dis, ptratio, and black
+
+#h)Rooms
+```{r}
+summary(Boston$rm > 7) #total of avg rooms greater than 7 = 64
+summary(Boston$rm > 8) #total of avg rooms greater than 8 = 13
+plot(Boston$crim, Boston$rm)
+plot(Boston$lstat, Boston$rm)
+plot(Boston$medv, Boston$rm)
+```
+Rooms with greater than 8 rooms are not in line with crime rates, but seem to be in the lower 10% of lstat and average $50,000 in median value of owner-occupied homes so these homes are most likely to be owned by more affluent people

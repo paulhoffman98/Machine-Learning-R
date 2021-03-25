@@ -1,0 +1,84 @@
+---
+title: "Individual Assignment 10"
+author: "Paul Hoffman (450128)"
+date: "12/6/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+#Problem 11.4
+
+##1. Run a neural net model on these data, using a single hidden layer with 5 nodes. Remember to first convert categorical variables into dummies and scale numerical predictor variables to a 0-1 (use function preprocess() with method=“range” - see Chapter 7). Generate a deciles-wise lift chart for the training and validation sets. Interpret the meaning (in business terms) of the leftmost bar of the validation decile- wise lift chart.
+
+```{r}
+library(neuralnet)
+library(caret)
+data <- read.csv("~/Downloads/EastWestAirlinesNN.csv")
+read_data=na.omit(data)
+set.seed(1)
+training_index=sample(1:nrow(read_data),0.75*nrow(read_data),replace=FALSE) 
+
+training_phone=read_data[training_index,"Phone_sale"] 
+test_phone=read_data[-training_index,"Phone_sale"]
+
+training_phone_min=min(read_data[training_index,"Phone_sale"])
+training_phone_max=max(read_data[training_index,"Phone_sale"])
+
+test_phone_min=min(read_data[-training_index,"Phone_sale"])
+test_phone_max=max(read_data[-training_index,"Phone_sale"])
+
+read_data_1=preProcess(read_data,method="range") 
+read_data_2=predict(read_data_1,read_data)
+
+scaled_phone=read_data_2$Phone_sale
+
+read_data_3=dummyVars(Phone_sale~.,data=read_data_2) 
+read_data_4=predict(read_data_3,read_data_2) 
+read_data_5=data.frame(read_data_4) 
+read_data_6=data.frame(scaled_phone,read_data_5) 
+training_data=read_data_6[training_index,]
+attach(training_data)
+```
+
+```{r}
+model1 = neuralnet(scaled_phone~., data = training_data, linear.output = F, hidden = 5)
+model1$weights
+plot(model1,rep="best")
+```
+
+The decile-wise chart was produced in Q2 below but I had problems forming it through the regression line which only gave me NA values.
+
+##2. Comment on the difference between the training and validation lift charts.
+
+```{r}
+# training = sample(training_data$ID., 600)
+# validation = sample(training_data$ID., 400)
+# dfnew = training_data[!is.na(training_data[validation,]$scaled_phone),]
+# reg = lm(scaled_phone~., data = dfnew, subset = training)
+# predv = predict(reg, newdata = training_data)
+# library(gains)
+# gain = gains(training_data[validation]$scaled_phone[!is.na(predv)], predv[!is.na(predv)])
+# options(scipen= 999)
+# phone = training_data[validation, ]$scaled_phone[!is.na(training_data[validation,]$scaled_phone)]
+# plot(c(0, gain$cum.pct.of.total*sum(scaled_phone)) ~ c(0, gain$cume.obs), xlab = "# cases", 
+#      ylab = "Scaled Phone", main = "Lift Chart", type = l)
+# lines(c(0, sum(scaled_phone)) ~c(0, dim(training_data[validation,][1]), col = "gray", lty = 2))
+# barplot(gain$mean.resp/mean(scaled_phone), names.arg = gain$depth, xlab = "Percentile", 
+#         ylab = "Mean response", main = "Decile-Wise lift chart")
+```
+
+Since I could not produce these charts I could not make a good inference between the two charts, my regression conitnued to produce only NA values. 
+
+##3. Run a second neural net model on the data, this time setting the number of hidden nodes to 1. Comment now on the difference between this model and the model you ran earlier, and how overfitting might have affected results.
+
+```{r}
+newnn = neuralnet(scaled_phone~., data = training_data, linear.output = F, hidden = 1)
+plot(newnn, rep = "best")
+```
+
+Compared to the 5 hidden nodes, we see slightly worse biases predicted and an overall worse RMSE. 
+
+##4. What sort of information, if any, is provided about the effects of the various variables?
+
+It is hard to tell the true effects of the variables but from the information we have we can see that Balance possibly has the greatest effect in the overal network. 

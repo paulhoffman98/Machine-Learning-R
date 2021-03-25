@@ -1,0 +1,125 @@
+---
+title: "Individual Assignment 3"
+author: "Paul Hoffman (450128)"
+date: "10/4/2020"
+output: html_document
+---
+
+```{r}
+library(ISLR)
+library(MASS)
+library(class)
+attach(Weekly)
+```
+
+##(a) Produce some numerical and graphical summaries of the Weekly data. Do there appear to be any patterns?
+
+```{r}
+summary(Weekly)
+```
+
+```{r}
+pairs(Weekly)
+```
+
+
+##(b) Use the full data set to perform a logistic regression with Direction as the response and the five lag variables plus Volume as predictors. Use the summary function to print the results. Doany of the predictors appear to be statistically significant? If so, which ones?
+
+```{r}
+fit1.glm<-glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, data = Weekly, family = "binomial")
+summary(fit1.glm)
+```
+
+Lag2 is the only significant predictor
+
+##(c) Compute the confusion matrix and overall fraction of correct predictions. Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.
+
+```{r}
+prob <- predict(fit1.glm, type = "response")
+predict.glm <- rep("Down", length(prob))
+predict.glm[prob > 0.5] <- "Up"
+table(predict.glm, Direction)
+mean (predict.glm == Direction)
+```
+
+We see that this confusion matrix has an approval rate of 56.1%  and can conclude that this  model is not ideal since it is slightly better than a coin-toss
+
+
+##(d) Now fit the logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).
+
+```{r}
+train = (Year<2009)
+Weekly.20092010 <- Weekly[!train,]
+Direction.20092010 <- Direction[!train]
+fit2.glm <- glm(Direction ~ Lag2, data = Weekly, family = binomial, subset = train)
+summary(fit2.glm)
+```
+```{r}
+prob2 <- predict(fit2.glm, Weekly.20092010, type = "response")
+pred2.glm <- rep("Down", length(prob2))
+pred2.glm[prob2 >  0.5] <- "Up"
+table(pred2.glm, Direction.20092010)
+mean(pred2.glm == Direction.20092010)
+```
+
+
+##(e) Repeat (d) using LDA.
+
+```{r}
+fit1.lda <- lda(Direction ~ Lag2, data = Weekly, subset = train)
+fit1.lda
+pred.lda <- predict(fit1.lda, Weekly.20092010)
+table(pred.lda$class, Direction.20092010)
+mean(pred.lda$class == Direction.20092010)
+```
+
+
+##(g) Repeat (d) using KNN with K = 1.
+
+```{r}
+set.seed(1)
+train.g = as.matrix(Lag2[train])
+test.g = as.matrix(Lag2[!train])
+train.Direction <- Direction[train]
+knn.pred = knn(train.g, test.g, train.Direction, k = 1)
+table(knn.pred, Direction.20092010)
+mean(knn.pred == Direction.20092010)
+```
+
+
+##(h) Which of these methods appears to provide the best results on this data?
+
+The best approval rates are 62.5% by both logistic regression and LDA.
+
+##(i) Experiment with different combinations of predictors, including possible transformations and interactions, for each of the methods. Report the variables, method, and associated confusion matrix that appears to provide the best results on the held out data. Note that you should also experiment with values for K in the KNN classifier.
+
+```{r}
+#Logistic Regression Lag2:Lag4
+fit3.glm <- glm(Direction ~ Lag2:Lag4, data = Weekly, family = binomial, subset = train)
+prob3 <- predict(fit3.glm, Weekly.20092010, type = "response")
+predict.glm3 <- rep("Down", length(prob3))
+predict.glm3[prob3 > 0.5] <- "Up"
+table(predict.glm3, Direction.20092010)
+mean(predict.glm3 == Direction.20092010)
+```
+
+Worse approval rate than earlier calculated logistic regression
+
+```{r}
+#LDA Regression Lag2:Lag4
+fit2.lda <- lda(Direction ~ Lag2:Lag4, data = Weekly, subset = train)
+pred2.lda <- predict(fit2.lda, Weekly.20092010)
+table(pred2.lda$class, Direction.20092010)
+mean(pred2.lda$class == Direction.20092010)
+```
+
+Worse approval rate than earlier calculated LDA
+
+```{r}
+#KNN Regression, K = 25
+knn2.pred = knn(train.g, test.g, train.Direction, k = 25)
+table(knn2.pred, Direction.20092010)
+mean(knn2.pred == Direction.20092010)
+```
+
+Larger K, in this scenario gave us a slightly better approval rate

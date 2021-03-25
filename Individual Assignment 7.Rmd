@@ -1,0 +1,59 @@
+---
+title: "Individual Assignment 7"
+author: "Paul Hoffman (450128)"
+date: "11/7/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+#Exercise 8.4: Problem 8 (parts a, b, & c)
+
+##Problem #8: In the lab, a classification tree was applied to the Carseats data set after converting Sales into a qualitative response variable. Now we will seek to predict Sales using regression trees and related approaches, treating the response as a quantitative variable.
+
+##(a) Split the data set into a training set and a test set.
+
+```{r}
+library(ISLR)
+set.seed(1)
+train = sample(1:nrow(Carseats), nrow(Carseats)/2)
+carseats.train = Carseats[train, ]
+carseats.test = Carseats[-train, ]
+```
+
+##(b) Fit a regression tree to the training set. Plot the tree, and interpret the results. What test MSE do you obtain?
+
+```{r}
+library(tree)
+tree.carseats = tree(Sales ~ ., data = carseats.train)
+tree.pred = predict(tree.carseats, carseats.test)
+mean((tree.pred - carseats.test$Sales)^2)
+plot(tree.carseats)
+text(tree.carseats)
+```
+
+The test MSE is 4.148897
+
+##(c) Use cross-validation in order to determine the optimal level of tree complexity. Does pruning the tree improve the test MSE?
+
+```{r}
+set.seed(1)
+cv.carseats = cv.tree(tree.carseats)
+plot(cv.carseats$size, cv.carseats$dev, type = "b")
+which.min(cv.carseats$dev)
+```
+
+Here we see that the best tree would be with 8 nodes, so now we prune with 8 leafs.
+
+```{r}
+prune.carseats <- prune.tree(tree.carseats, best = 8)
+plot(prune.carseats)
+text(prune.carseats, pretty = 0)
+```
+
+```{r}
+prune.pred = predict(prune.carseats, newdata = carseats.test)
+mean((prune.pred - carseats.test$Sales)^2)
+```
+
+The test MSE increases from 4.148897 to 5.09085 due to pruning.

@@ -1,0 +1,77 @@
+---
+title: "Individual Assignment 6"
+author: "Paul Hoffman (450128)"
+date: "10/24/2020"
+output: html_document
+---
+
+```{r}
+library(glmnet)
+set.seed(1)
+n = 100
+x = rnorm(100)
+eps = rnorm(100)
+y = 5 + 2*x + -1*x^2 + .6*x^3 + eps
+data.full = data.frame(y = y, x = x)
+```
+
+#Exercise 6.8: Problem 8 (parts e & f)
+##For Context, Refer to Problem 8 (parts a, b, c, & d). 
+
+##(e) Now fit a lasso model to the simulated data, again using X, X2, . . . , X10 as predictors. Use cross-validation to select the optimal value of λ. Create plots of the cross-validation error as a function of λ. Report the resulting coefficient estimates, and discuss the results obtained.
+
+```{r}
+x.matrix = model.matrix(y ~ poly(x, 10, raw = TRUE), data = data.full)[,-1]
+cross.lasso = cv.glmnet(x.matrix, y, alpha=1)
+plot(cross.lasso)
+```
+
+```{r}
+bestlambda = cross.lasso$lambda.min
+fit.lambda = glmnet(x.matrix, y, alpha=1)
+predict(fit.lambda, s = bestlambda, type = "coefficients")[1:11, ]
+```
+
+Refitting our model using our bestlambda through cross-validation, we can see thata the LASSO models chooses X, X^2, X^3, and X^5 for variables in this model.
+
+#(f) Now generate a response vector Y according to the model 𝑌=𝛽0+𝛽7𝑋7+𝜖,and perform best subset selection and the lasso. Discuss the results obtained.
+
+```{r}
+#Best Subset
+library(leaps)
+y = 5 + 9*x^7 + eps
+data.full = data.frame(y = y, x = x)
+regfit.full = regsubsets(y ~ poly(x, 10, raw = TRUE), data = data.full, nvmax = 10)
+regfit.sum = summary(regfit.full)
+par(mfrow = c(2, 2))
+plot(regfit.sum$cp, xlab = "Num of Variables", ylab = "Cp", type = "l")
+points(2, regfit.sum$cp[2], pch=20, col="red", lwd=7)
+plot(regfit.sum$bic, xlab = "Num ofVariables", ylab = "BIC", type = "l")
+points(1, regfit.sum$bic[1], pch=20, col="red", lwd=7)
+plot(regfit.sum$adjr2, xlab = "Num of Variables", ylab = "Adj R^2", type = "l")
+points(4, regfit.sum$adjr2[4], pch=20, col="red", lwd=7)
+```
+
+Cp chose the 2 variable model, which BIC chose 1 and adjusted R^2 chose 4 variable model.
+
+```{r}
+coef(regfit.full, 1)
+coef(regfit.full, 2)
+coef(regfit.full, 4)
+```
+
+BIC is closest to the value 9 I gave to the coefficient of X^7
+
+```{r}
+x.matrix2 = model.matrix(y ~ poly(x, 10, raw = TRUE), data = data.full)[,-1]
+cross.lasso2 = cv.glmnet(x.matrix, y, alpha=1)
+plot(cross.lasso2)
+```
+
+```{r}
+bestlambda2 = cross.lasso2$lambda.min
+fit.lambda2 = glmnet(x.matrix2, y, alpha = 1)
+predict(fit.lambda2, s = bestlambda2, type = "coefficients")[1:11, ]
+```
+
+Lasso, just as Best Subset (BIC), chose the 1 variable model, except that the coefficient is 8.738393 which is more far off to 9 than BIC gave us. 

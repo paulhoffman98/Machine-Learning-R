@@ -1,0 +1,129 @@
+---
+title: "Individual Assignment 4"
+author: "Paul Hoffman (450128)"
+date: "10/11/2020"
+output: html_document
+---
+
+```{r}
+library(ISLR)
+library(MASS)
+library(boot)
+attach(Weekly)
+```
+
+
+#10. This question should be answered using the Weekly data set, which is part of the ISLR package. This data is similar in nature to the Smarket data from this chapter’s lab, except that it contains 1, 089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010.
+
+##for context: (d) Now fit the logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).
+
+##(f) Repeat (d) using QDA.
+
+```{r}
+train = (Year<2009)
+Weekly.20092010 <- Weekly[!train,]
+Direction.20092010 <- Direction[!train]
+fit.qda = qda(Direction ~ Lag2, data = Weekly, subset = train)
+pred.qda <- predict(fit.qda, Weekly.20092010)
+table(pred.qda$class, Direction.20092010)
+mean(pred.qda$class == Direction.20092010)
+```
+
+We see that there is an approval rating of 58.65% which looking back at the previous regressions is slightly better. 
+
+#8. We will now perform cross-validation on a simulated data set.
+
+##(a) Generate a simulated data set, In this data set, what is n, p? Write out the model used to generate the data in equation form.
+
+```{r}
+set.seed(1)
+x=rnorm(100)
+y=x-2* x^2+ rnorm (100)
+```
+
+n = 100 and p = 2 and the equation is Y = X-2(X)^2+ε
+
+##(b) Create a scatterplot of X against Y. Comment on what you find.
+
+```{r}
+plot(x,y)
+```
+
+The graph seems to be a curved, negative hyperbolic relationship
+
+##(c) Set a random seed, and then compute the LOOCV errors that result from fitting the following four models using least squares:
+
+##i. Y = β0 + β1X + ε
+
+```{r}
+set.seed(10)
+data <- data.frame(x,y)
+fit.glm <- glm(y ~ x)
+cv.glm(data, fit.glm)$delta[1]
+```
+
+##ii. Y = β0 + β1X + β2X2 + ε
+
+```{r}
+fit.glm2 <- glm(y ~ poly(x, 2))
+cv.glm(data, fit.glm2)$delta[1]
+```
+
+##iii. Y = β0 + β1X + β2X2 + β3X3 + ε
+
+```{r}
+fit.glm3 <- glm(y ~ poly(x, 3))
+cv.glm(data, fit.glm3)$delta[1]
+```
+
+##iv. Y = β0 + β1X + β2X2 + β3X3 + β4X4 + ε
+
+```{r}
+fit.glm4 <- glm(y ~ poly(x, 4))
+cv.glm(data, fit.glm4)$delta[1]
+```
+
+##(d) Repeat (c) using another random seed, and report your results. Are your results the same as what you got in (c)? Why?
+
+##i. Y = β0 + β1X + ε
+
+```{r}
+set.seed(100)
+fit.glm5 <- glm(y ~ x)
+cv.glm(data, fit.glm5)$delta[1]
+```
+
+##ii. Y = β0 + β1X + β2X2 + ε
+
+```{r}
+fit.glm2 <- glm(y ~ poly(x, 2))
+cv.glm(data, fit.glm2)$delta[1]
+```
+
+##iii. Y = β0 + β1X + β2X2 + β3X3 + ε
+
+```{r}
+fit.glm3 <- glm(y ~ poly(x, 3))
+cv.glm(data, fit.glm3)$delta[1]
+```
+
+##iv. Y = β0 + β1X + β2X2 + β3X3 + β4X4 + ε
+
+```{r}
+fit.glm4 <- glm(y ~ poly(x, 4))
+cv.glm(data, fit.glm4)$delta[1]
+```
+
+The results are the exact same since under these calculations we are only looking at n of observations
+
+##(e) Which of the models in (c) had the smallest LOOCV error? Is this what you expected? Explain your answer.
+
+Part ii) and this can be explained since our plot was hyperbolic the the lowest error would be the quadratic equation
+
+##(f) Comment on the statistical significance of the coefficient estimates that results from fitting each of the models in (c) using least squares. Do these results agree with the conclusions drawn based on the cross-validation results?
+
+```{r}
+summary(fit.glm4)
+```
+
+We can see that linear and quadratic coeficients are the only statistically significant which aligns with our conclusions drawn based on the cross-validation results.

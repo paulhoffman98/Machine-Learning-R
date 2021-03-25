@@ -1,0 +1,59 @@
+---
+title: "Individual Assignment 2"
+author: "Paul Hoffman (450128)"
+date: "9/27/2020"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+```{r}
+library(ISLR)
+attach(Carseats)
+```
+
+
+##(a) Fit a multiple regression model to predict Sales using Price, Urban, and US.
+```{r}
+fit = lm(Sales ~ Price + Urban + US, data = Carseats)
+summary(fit)
+```
+##(b) Provide an interpretation of each coefficient in the model. Be careful—some of the variables in the model are qualitative!
+
+We know that UrbanYes and USYes are qualitative. Therefore for UrbanYes on average sales in Urban areas 21.916 units less than in rural areas. As well as, for USYes on average sales in the US are 12000.573 more than in non-US countries. For Price we can say that for every dollar of sales Price increase effects sales by 54.459 units sold. 
+
+##(c) Write out the model in equation form, being careful to handle the qualitative variables properly.
+
+Sales = 13.043469 - 0.054459 Price - 0.021916 Urban -  1.200573 US + e
+(Urban and US = 1 if Yes, O if No)
+
+##(d) For which of the predictors can you reject the null hypothesis H0:βj=0?
+
+We can reject the  null hypothesis for Price and US
+
+##(e) On the basis of your response to the previous question, fit a smaller model that only uses the predictors for which there is evidence of association with the outcome.
+
+```{r}
+fit2 = lm(Sales ~ Price + US, data = Carseats)
+summary(fit2)
+```
+
+##(f) How well do the models in (a) and (e) fit the data?
+
+Looking at R-squared, the smaller model fits better, barely, with 23.92629% of the variablility is explained in model
+
+##(g) Using the model from (e), obtain 95% confidence intervals for the coefficient(s).
+
+```{r}
+confint(fit2)
+```
+
+##(h) Is there evidence of outliers or high leverage observations in the model from (e)?
+
+```{r}
+par(mfrow = c(2,2))
+plot(fit2)
+```
+
+There is only an  outlier in the Residuls vs. Leverage plot past 0.04 leverage
+

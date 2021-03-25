@@ -1,0 +1,191 @@
+---
+title: "Individual Assignment 9"
+author: "Paul Hoffman (450128)"
+date: "11/22/2020"
+output: html_document
+---
+
+#Problem #8. This problem involves the OJ data set which is part of the ISLR package. 
+
+##(a) Create a training set containing a random sample of 800 observations, and a test set containing the remaining observations.
+
+```{r}
+library(ISLR)
+library(e1071)
+set.seed(1)
+train = sample(nrow(OJ), 800)
+OJ.train = OJ[train, ]
+OJ.test = OJ[-train, ]
+```
+
+##(b) Fit a support vector classifier to the training data using cost=0.01, with Purchase as the response and the other variables as predictors. Use the summary() function to produce summary statistics, and describe the results obtained.
+
+```{r}
+svm.linear = svm(Purchase ~ ., data = OJ.train, kernel = "linear", cost = 0.01)
+summary(svm.linear)
+```
+
+SVM has created 432 support vectors of those we have two levels of CH and MM with 215 and 217 respectively from 800 observations. 
+
+##(c) What are the training and test error rates?
+
+```{r}
+train.pred = predict(svm.linear, OJ.train)
+table(OJ.train$Purchase, train.pred)
+mean(OJ$Purchase[train] != train.pred)
+```
+
+Train error rate is 0.16625.
+
+```{r}
+test.pred = predict(svm.linear, OJ.test)
+table(OJ.test$Purchase, test.pred)
+mean(OJ$Purchase[-train] != test.pred)
+```
+
+Test error rate is 0.1814815.
+
+##(d) Use the tune() function to select an optimal cost. Consider values in the range 0.01 to 10.
+
+```{r}
+set.seed(2)
+tune.out = tune(svm, Purchase ~ ., data=OJ.train, kernel ="linear", ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+summary(tune.out)
+```
+
+The optimal cost is 0.01
+
+##(e) Compute the training and test error rates using this new value for cost.
+
+```{r}
+svm.linear = svm(Purchase ~ ., kernel = "linear", data = OJ.train, cost = tune.out$best.parameters$cost)
+train.pred = predict(svm.linear, OJ.train)
+table(OJ.train$Purchase, train.pred)
+mean(OJ$Purchase[train] != train.pred)
+```
+
+Train error rate is 0.15875
+
+```{r}
+test.pred = predict(svm.linear, OJ.test)
+table(OJ.test$Purchase, test.pred)
+mean(OJ$Purchase[-train] != test.pred)
+```
+
+The test error rate is 0.1888889
+
+##(f) Repeat parts (b) through (e) using a support vector machine with a radial kernel. Use the default value for gamma.
+
+```{r}
+svm.radial = svm(Purchase ~., data = OJ.train, kernel = "radial")
+summary(svm.radial)
+```
+
+Radial kernel has 379 support vecors of which 188 are CH and 191 are MM. 
+
+```{r}
+train.pred = predict(svm.radial, OJ.train)
+table(OJ.train$Purchase, train.pred)
+mean(OJ$Purchase[train] != train.pred)
+```
+
+Train error rate is 0.145
+
+```{r}
+test.pred = predict(svm.radial, OJ.test)
+table(OJ.test$Purchase, test.pred)
+mean(OJ$Purchase[-train] != test.pred)
+```
+
+Test error rate is 0.1703704
+
+```{r}
+set.seed(2)
+tune.out = tune(svm, Purchase ~ ., data = OJ.train, kernel = "radial", ranges = list(cost = 10^seq(-2,1, by = 0.25)))
+summary(tune.out)
+```
+
+Optimal cost is 1.
+
+```{r}
+svm.radial = svm(Purchase ~., data = OJ.train, kernel = "radial", cost = tune.out$best.parameters$cost)
+summary(svm.radial)
+```
+
+The number of support vectors is 379 with 188 for CH and 191 for MM. 
+
+```{r}
+train.pred = predict(svm.radial, OJ.train)
+table(OJ.train$Purchase, train.pred)
+mean(OJ$Purchase[train] != train.pred)
+```
+
+Train error rate is 0.145
+
+```{r}
+test.pred = predict(svm.radial, OJ.test)
+table(OJ.test$Purchase, test.pred)
+mean(OJ$Purchase[-train] != test.pred)
+```
+
+Test error rate is 0.1703704. Thus tuning does not improve our results from the already used optimal cost of 1. 
+
+##(g) Repeat parts (b) through (e) using a support vector machine with a polynomial kernel. Set degree=2.
+
+```{r}
+svm.poly = svm(Purchase ~., kernel = "polynomial", data = OJ.train, degree=2)
+summary(svm.poly)
+```
+
+We have 454 support vectors of which 224 are CH and 230 are MM.
+
+```{r}
+train.pred = predict(svm.poly, OJ.train)
+table(OJ.train$Purchase, train.pred)
+mean(OJ$Purchase[train] != train.pred)
+```
+
+Train error rate is 0.1725
+
+```{r}
+test.pred = predict(svm.poly, OJ.test)
+table(OJ.test$Purchase, test.pred)
+mean(OJ$Purchase[-train] != test.pred)
+```
+
+Test error rate is 0.1888889
+
+```{r}
+set.seed(2)
+tune.out = tune(svm, Purchase ~., data = OJ.train, kernel = "polynomial", degree = 2, ranges = list(cost = 10^seq(-2, 1, by = 0.25)))
+summary(tune.out)
+```
+
+We see that the best cost is 1.77827941
+
+```{r}
+svm.poly = svm(Purchase ~., data = OJ.train, kernel = "polynomial", degree = 2, cost = tune.out$best.parameters$cost)
+summary(svm.poly)
+```
+
+We have 342 support vectors of which 170 are CH and 172 are MM.
+
+```{r}
+train.pred = predict(svm.poly, OJ.train)
+table(OJ.train$Purchase, train.pred)
+mean(OJ$Purchase[train] != train.pred)
+```
+
+Train error rate is  0.145
+
+```{r}
+test.pred = predict(svm.poly, OJ.test)
+table(OJ.test$Purchase, test.pred)
+mean(OJ$Purchase[-train] != test.pred)
+```
+
+Test error rate is 0.1851852. 
+Thus tuning reduces both test and train error rates
+
+##(h) Overall, which approach seems to give the best results on this data?
+Looking through the data we would say overall radial gives us the best results. 
